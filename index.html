@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hazel - Webnovel</title>
+    <style>
+        /* ရှေ့ကပေးခဲ့တဲ့ CSS Style များအတိုင်း ပြန်သုံးပါ */
+        :root { --accent: #e67e22; --bg: #121212; --card: #1e1e1e; --text: #f0f0f0; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 10px; margin: 0; }
+        .container { max-width: 600px; margin: auto; }
+        .brand { color: var(--accent); font-size: 28px; font-weight: bold; font-style: italic; text-align: center; margin: 15px 0; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; }
+        .submit-btn { background: var(--accent); color: white; border: none; padding: 15px; width: 100%; font-size: 16px; }
+        .hidden { display: none; }
+        .novel-item { display: flex; align-items: center; background: #252525; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; cursor: pointer; }
+        .novel-item img { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="brand">Hazel</div>
+
+    <div id="authSection" class="card">
+        <h3>Login / Sign Up</h3>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="submit-btn" onclick="window.authAction('login')">Login</button>
+        <button style="background:none; color:var(--accent); border:none; margin-top:10px; width:100%;" onclick="window.authAction('signup')">အကောင့်သစ်ဖွင့်ရန် (Sign Up)</button>
+    </div>
+
+    <div id="mainSection" class="hidden">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <button id="addBtn" class="submit-btn" style="width: 70%;" onclick="showAdmin()">+ Novel တင်ရန်</button>
+            <button onclick="window.logout()" style="background:#c0392b; color:white; border:none; padding:10px; border-radius:8px;">Logout</button>
+        </div>
+        <div class="card">
+            <h3>Library (Online)</h3>
+            <div id="libraryList">Loading...</div>
+        </div>
+    </div>
+
+    <div id="adminArea" class="card hidden">
+        <button onclick="goHome()" style="background:none; border:none; color:var(--accent); cursor:pointer;">❮ Back</button>
+        <h3>တင်မည့် Novel အချက်အလက်</h3>
+        <input type="text" id="nTitle" placeholder="Novel အမည်">
+        <input type="file" id="nCover" accept="image/*">
+        <input type="number" id="nChNo" placeholder="အပိုင်း">
+        <textarea id="nContent" rows="8" placeholder="စာသားများ..."></textarea>
+        <button class="submit-btn" onclick="window.uploadNovel()">Cloud ပေါ်သို့ တင်မည်</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // သင်ပေးထားသော Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIt93W3hXXHu30cMFm47pXj9Dm0UG5IgA",
+        authDomain: "hazelnovel-web.firebaseapp.com",
+        projectId: "hazelnovel-web",
+        storageBucket: "hazelnovel-web.firebasestorage.app",
+        messagingSenderId: "516666865374",
+        appId: "1:516666865374:web:e89a3906e27143cf53744f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+
+    // Auth Actions
+    window.authAction = (mode) => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        if(mode === 'login') {
+            signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+        } else {
+            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("Success!")).catch(e => alert(e.message));
+        }
+    };
+
+    window.logout = () => signOut(auth);
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            loadLibrary();
+        } else {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('mainSection').classList.add('hidden');
+        }
+    });
+
+    // Firestore Upload
+    window.uploadNovel = async () => {
+        const title = document.getElementById('nTitle').value.trim();
+        const ch = parseInt(document.getElementById('nChNo').value);
+        const content = document.getElementById('nContent').value;
+        const file = document.getElementById('nCover').files[0];
+
+        if(!title || !ch || !content) return alert("ဖြည့်ပါ");
+
+        let coverBase64 = "";
+        if(file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                coverBase64 = reader.result;
+                await saveToCloud(title, ch, content, coverBase64);
+            };
+        } else {
+            await saveToCloud(title, ch, content, "");
+        }
+    };
+
+    async function saveToCloud(title, ch, content, cover) {
+        const novelRef = doc(db, "novels", title);
+        const docSnap = await getDoc(novelRef);
+
+        if (docSnap.exists()) {
+            await updateDoc(novelRef, {
+                chapters: arrayUnion({ ch, content })
+            });
+        } else {
+            await setDoc(novelRef, {
+                title: title,
+                cover: cover,
+                chapters: [{ ch, content }]
+            });
+        }
+        alert("Cloud ပေါ်သို့ တင်ပြီးပါပြီ!");
+        location.reload();
+    }
+
+    async function loadLibrary() {
+        const querySnapshot = await getDocs(collection(db, "novels"));
+        const list = document.getElementById('libraryList');
+        list.innerHTML = "";
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.className = 'novel-item';
+            div.innerHTML = `<img src="${data.cover || ''}"> <div><strong>${data.title}</strong></div>`;
+            list.appendChild(div);
+        });
+    }
+
+    window.showAdmin = () => {
+        document.getElementById('mainSection').classList.add('hidden');
+        document.getElementById('adminArea').classList.remove('hidden');
+    };
+    window.goHome = () => location.reload();
+
+</script>
+</body>
+</html>
+
+
