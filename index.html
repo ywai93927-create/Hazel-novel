@@ -3,67 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hazel - Webnovel</title>
+    <title>H - Hazel Novel</title>
     <style>
-        :root { --accent: #e67e22; --bg: #121212; --card: #1e1e1e; --text: #f0f0f0; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 10px; margin: 0; }
-        .container { max-width: 600px; margin: auto; }
-        .brand { color: var(--accent); font-size: 28px; font-weight: bold; font-style: italic; text-align: center; margin: 15px 0; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .submit-btn { background: var(--accent); color: white; border: none; padding: 15px; width: 100%; font-size: 16px; }
-        .google-btn { background: white; color: #444; border: 1px solid #ddd; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
-        .hidden { display: none; }
-        .novel-item { display: flex; align-items: center; background: #252525; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; cursor: pointer; }
-        .novel-item img { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
-        .back-key { background: none; border: none; color: var(--accent); font-size: 18px; margin-bottom: 10px; }
+        :root { --accent: #ff9f43; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --font-size: 16px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 0; margin: 0; font-size: var(--font-size); }
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+        .logo-h { background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px; font-weight: bold; cursor: pointer; }
+        .profile-icon { font-size: 24px; cursor: pointer; background: #222; padding: 8px; border-radius: 50%; }
+
+        .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #222; }
+        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #252525; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: inherit; }
+        button { cursor: pointer; border-radius: 10px; font-weight: bold; transition: 0.3s; border: none; }
+        .submit-btn { background: var(--accent); color: #000; padding: 15px; width: 100%; font-size: 16px; }
+        .hidden { display: none !important; }
+        
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; background: #222; color: #888; border-radius: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn.active { background: var(--accent); color: #000; }
+
+        .section-title { font-size: 18px; font-weight: bold; margin: 20px 0 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
+        .top-novels-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; scrollbar-width: none; }
+        .top-item img { width: 110px; height: 150px; object-fit: cover; border-radius: 12px; }
+        .recent-item { display: flex; align-items: center; background: #1e1e1e; padding: 12px; margin-bottom: 10px; border-radius: 12px; }
+        .recent-item img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="brand">Hazel</div>
+    <div class="header">
+        <div class="logo-h" onclick="window.goHome()">H</div>
+        <div id="userMenu" class="hidden"><span class="profile-icon" onclick="window.showProfile()">👤</span></div>
+    </div>
 
     <div id="authSection" class="card">
-        <h3>Login / Sign Up</h3>
+        <h3 id="authTitle" style="text-align:center;">Welcome</h3>
+        <input type="text" id="userName" class="hidden" placeholder="Full Name">
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Password (အနည်းဆုံး ၆ လုံး)">
-        <button class="submit-btn" onclick="window.authAction('login')">Login</button>
-        
-        <button class="google-btn" onclick="window.googleLogin()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; margin-right:10px;">
-            Google ဖြင့်ဝင်ရန်
-        </button>
-
-        <button style="background:none; color:var(--accent); border:none; margin-top:15px; width:100%;" onclick="window.authAction('signup')">အကောင့်သစ်ဖွင့်ရန် (Sign Up)</button>
+        <input type="password" id="pass" placeholder="Password">
+        <input type="password" id="confirmPass" class="hidden" placeholder="Confirm Password">
+        <button id="mainAuthBtn" class="submit-btn" onclick="window.authAction('login')">Login</button>
+        <button id="toggleBtn" style="background:none; color:#888; margin-top:15px; width:100%;" onclick="window.toggleAuthMode()">Create account</button>
     </div>
 
     <div id="mainSection" class="hidden">
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <button id="addBtn" class="submit-btn" style="width: 70%;" onclick="showAdmin()">+ Novel တင်ရန်</button>
-            <button onclick="window.logout()" style="background:#c0392b; color:white; border:none; padding:10px; border-radius:8px;">Logout</button>
+        <div class="section-title">Trending</div>
+        <div id="topNovelsList" class="top-novels-scroll"></div>
+        <div class="section-title">Latest Updates</div>
+        <div id="recentUpdatesList"></div>
+    </div>
+
+    <div id="profileSection" class="hidden">
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="window.switchTab('studio')">Studio</button>
+            <button class="tab-btn" onclick="window.switchTab('setting')">Settings</button>
         </div>
-        <div class="card">
-            <h3>Library (Cloud)</h3>
-            <div id="libraryList">Loading novels...</div>
+
+        <div id="studioTab">
+            <button class="submit-btn" onclick="window.showAdmin()">+ Create Novel</button>
+            <div class="section-title">My Works</div>
+            <div id="myNovelsList"></div>
+        </div>
+
+        <div id="settingTab" class="hidden">
+            <div class="card">
+                <h4>Change Password</h4>
+                <input type="password" id="oldPass" placeholder="Current Password">
+                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                <input type="password" id="newPass" placeholder="New Password">
+                <input type="password" id="confirmNewPass" placeholder="Confirm New Password">
+                <button class="submit-btn" onclick="window.updateUserPassword()">Update Password</button>
+            </div>
+            
+            <div class="card">
+                <span>Font Size: </span>
+                <select onchange="document.documentElement.style.setProperty('--font-size', this.value)">
+                    <option value="16px">Normal</option>
+                    <option value="19px">Large</option>
+                    <option value="22px">Extra Large</option>
+                </select>
+            </div>
+            <button onclick="window.logout()" style="width:100%; background:#c0392b; color:white; padding:12px; border-radius:10px;">Logout</button>
         </div>
     </div>
 
     <div id="adminArea" class="card hidden">
-        <button class="back-key" onclick="goHome()">❮ Back</button>
-        <h3>Novel အသစ်တင်မည်</h3>
-        <input type="text" id="nTitle" placeholder="Novel အမည်">
+        <button onclick="window.showProfile()" style="background:none; color:var(--accent);">❮ Back to Studio</button>
+        <h3>Creator Studio</h3>
+        <input type="text" id="nTitle" placeholder="Novel Title">
         <input type="file" id="nCover" accept="image/*">
-        <input type="number" id="nChNo" placeholder="အပိုင်း (နံပါတ်)">
-        <textarea id="nContent" rows="8" placeholder="စာသားများ..."></textarea>
-        <button class="submit-btn" onclick="window.uploadNovel()">Cloud ပေါ်သို့ တင်မည်</button>
+        <input type="number" id="nChNo" placeholder="Chapter No.">
+        <textarea id="nContent" rows="12" placeholder="Start writing your masterpiece..."></textarea>
+        <button class="submit-btn" onclick="window.uploadNovel()">Publish</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -78,104 +117,122 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
 
-    // Google Login
-    window.googleLogin = () => {
-        signInWithPopup(auth, provider)
-            .then(() => goHome())
-            .catch(e => alert("Google Login Error: " + e.message));
+    let isSignUpMode = false;
+
+    window.toggleAuthMode = () => {
+        isSignUpMode = !isSignUpMode;
+        document.getElementById('userName').classList.toggle('hidden', !isSignUpMode);
+        document.getElementById('confirmPass').classList.toggle('hidden', !isSignUpMode);
+        document.getElementById('authTitle').innerText = isSignUpMode ? "Create Account" : "Login";
     };
 
-    // Email Auth Actions
-    window.authAction = (mode) => {
+    window.switchTab = (tab) => {
+        document.getElementById('studioTab').classList.toggle('hidden', tab !== 'studio');
+        document.getElementById('settingTab').classList.toggle('hidden', tab !== 'setting');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText.toLowerCase().includes(tab));
+        });
+    };
+
+    window.goHome = () => { 
+        document.getElementById('mainSection').classList.remove('hidden'); 
+        document.getElementById('profileSection').classList.add('hidden'); 
+        document.getElementById('adminArea').classList.add('hidden'); 
+    };
+    
+    window.showProfile = () => { 
+        document.getElementById('mainSection').classList.add('hidden'); 
+        document.getElementById('profileSection').classList.remove('hidden'); 
+        document.getElementById('adminArea').classList.add('hidden'); 
+    };
+
+    window.showAdmin = () => { 
+        document.getElementById('profileSection').classList.add('hidden'); 
+        document.getElementById('adminArea').classList.remove('hidden'); 
+    };
+
+    window.authAction = async () => {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
-        if(!email || !pass) return alert("Email နှင့် Password ဖြည့်ပါ");
+        const confirm = document.getElementById('confirmPass').value;
+        const name = document.getElementById('userName').value;
 
-        if(mode === 'login') {
-            signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
-        } else {
-            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("အကောင့်ဖွင့်ပြီးပါပြီ!")).catch(e => alert(e.message));
-        }
+        try {
+            if(isSignUpMode) {
+                if(pass !== confirm) return alert("Passwords do not match!");
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(res.user, { displayName: name });
+            } else {
+                await signInWithEmailAndPassword(auth, email, pass);
+            }
+        } catch(e) { alert(e.message); }
+    };
+
+    window.updateUserPassword = async () => {
+        const user = auth.currentUser;
+        const oldP = document.getElementById('oldPass').value;
+        const newP = document.getElementById('newPass').value;
+        const confirmP = document.getElementById('confirmNewPass').value;
+
+        if(!oldP || !newP) return alert("Please fill all fields");
+        if(newP !== confirmP) return alert("New passwords do not match!");
+
+        try {
+            const credential = EmailAuthProvider.credential(user.email, oldP);
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newP);
+            alert("Password updated successfully!");
+            location.reload();
+        } catch(e) { alert("Error: Incorrect current password"); }
     };
 
     window.logout = () => signOut(auth).then(() => location.reload());
 
     onAuthStateChanged(auth, (user) => {
-        if(user) {
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('mainSection').classList.remove('hidden');
-            loadLibrary();
-        } else {
-            document.getElementById('authSection').classList.remove('hidden');
-            document.getElementById('mainSection').classList.add('hidden');
-        }
+        document.getElementById('authSection').classList.toggle('hidden', !!user);
+        document.getElementById('mainSection').classList.toggle('hidden', !user);
+        document.getElementById('userMenu').classList.toggle('hidden', !user);
+        if(user) loadContent(user.uid);
     });
 
-    // Cloud Upload
     window.uploadNovel = async () => {
         const title = document.getElementById('nTitle').value.trim();
-        const ch = parseInt(document.getElementById('nChNo').value);
+        const ch = document.getElementById('nChNo').value;
         const content = document.getElementById('nContent').value;
         const file = document.getElementById('nCover').files[0];
+        if(!title || !ch || !content) return alert("Fill all fields");
 
-        if(!title || !ch || !content) return alert("အချက်အလက်စုံအောင် ဖြည့်ပါ");
-
-        let coverBase64 = "";
-        if(file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                coverBase64 = reader.result;
-                await saveToCloud(title, ch, content, coverBase64);
-            };
-        } else {
-            await saveToCloud(title, ch, content, "");
-        }
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const ref = doc(db, "novels", title);
+            const snap = await getDoc(ref);
+            const data = { ch, content, timestamp: Date.now() };
+            if(snap.exists()) {
+                await updateDoc(ref, { chapters: arrayUnion(data), lastUpdate: Date.now() });
+            } else {
+                await setDoc(ref, { title, cover: reader.result, chapters: [data], author: auth.currentUser.uid, authorName: auth.currentUser.displayName, lastUpdate: Date.now() });
+            }
+            alert("Published!"); window.showProfile();
+        };
+        if(file) reader.readAsDataURL(file); else reader.onload();
     };
 
-    async function saveToCloud(title, ch, content, cover) {
-        try {
-            const novelRef = doc(db, "novels", title);
-            const docSnap = await getDoc(novelRef);
-            if (docSnap.exists()) {
-                await updateDoc(novelRef, { chapters: arrayUnion({ ch, content }) });
-            } else {
-                await setDoc(novelRef, { title, cover, chapters: [{ ch, content }] });
-            }
-            alert("အောင်မြင်စွာ တင်ပြီးပါပြီ!");
-            goHome();
-        } catch (e) { alert("Error: " + e.message); }
-    }
-
-    async function loadLibrary() {
-        const querySnapshot = await getDocs(collection(db, "novels"));
-        const list = document.getElementById('libraryList');
-        list.innerHTML = "";
-        if(querySnapshot.empty) list.innerHTML = "Novel များ မရှိသေးပါ။";
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const div = document.createElement('div');
-            div.className = 'novel-item';
-            div.innerHTML = `<img src="${data.cover || 'https://via.placeholder.com/60x80'}"> <div><strong>${data.title}</strong></div>`;
-            list.appendChild(div);
+    async function loadContent(uid) {
+        const snap = await getDocs(collection(db, "novels"));
+        const topL = document.getElementById('topNovelsList');
+        const recentL = document.getElementById('recentUpdatesList');
+        const myL = document.getElementById('myNovelsList');
+        topL.innerHTML = recentL.innerHTML = myL.innerHTML = "";
+        let all = []; snap.forEach(doc => all.push(doc.data()));
+        all.sort((a,b) => b.lastUpdate - a.lastUpdate);
+        all.forEach(n => {
+            const html = `<div class="recent-item"><img src="${n.cover}"><div><h4>${n.title}</h4><p>Ch ${n.chapters[n.chapters.length-1].ch}</p></div></div>`;
+            recentL.innerHTML += html;
+            topL.innerHTML += `<div class="top-item"><img src="${n.cover}"><span>${n.title}</span></div>`;
+            if(n.author === uid) myL.innerHTML += html;
         });
     }
-
-    window.showAdmin = () => {
-        document.getElementById('mainSection').classList.add('hidden');
-        document.getElementById('adminArea').classList.remove('hidden');
-    };
-    window.goHome = () => {
-        document.getElementById('adminArea').classList.add('hidden');
-        document.getElementById('mainSection').classList.remove('hidden');
-        loadLibrary();
-    };
-
 </script>
 </body>
 </html>
-
-
-    
