@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hazel - Webnovel</title>
     <style>
-        /* ရှေ့ကပေးခဲ့တဲ့ CSS Style များအတိုင်း ပြန်သုံးပါ */
         :root { --accent: #e67e22; --bg: #121212; --card: #1e1e1e; --text: #f0f0f0; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 10px; margin: 0; }
         .container { max-width: 600px; margin: auto; }
         .brand { color: var(--accent); font-size: 28px; font-weight: bold; font-style: italic; text-align: center; margin: 15px 0; }
         .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
         .submit-btn { background: var(--accent); color: white; border: none; padding: 15px; width: 100%; font-size: 16px; }
+        .google-btn { background: white; color: #444; border: 1px solid #ddd; padding: 12px; width: 100%; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
         .hidden { display: none; }
         .novel-item { display: flex; align-items: center; background: #252525; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; cursor: pointer; }
         .novel-item img { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+        .back-key { background: none; border: none; color: var(--accent); font-size: 18px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -27,9 +28,15 @@
     <div id="authSection" class="card">
         <h3>Login / Sign Up</h3>
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Password">
+        <input type="password" id="pass" placeholder="Password (အနည်းဆုံး ၆ လုံး)">
         <button class="submit-btn" onclick="window.authAction('login')">Login</button>
-        <button style="background:none; color:var(--accent); border:none; margin-top:10px; width:100%;" onclick="window.authAction('signup')">အကောင့်သစ်ဖွင့်ရန် (Sign Up)</button>
+        
+        <button class="google-btn" onclick="window.googleLogin()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; margin-right:10px;">
+            Google ဖြင့်ဝင်ရန်
+        </button>
+
+        <button style="background:none; color:var(--accent); border:none; margin-top:15px; width:100%;" onclick="window.authAction('signup')">အကောင့်သစ်ဖွင့်ရန် (Sign Up)</button>
     </div>
 
     <div id="mainSection" class="hidden">
@@ -38,17 +45,17 @@
             <button onclick="window.logout()" style="background:#c0392b; color:white; border:none; padding:10px; border-radius:8px;">Logout</button>
         </div>
         <div class="card">
-            <h3>Library (Online)</h3>
-            <div id="libraryList">Loading...</div>
+            <h3>Library (Cloud)</h3>
+            <div id="libraryList">Loading novels...</div>
         </div>
     </div>
 
     <div id="adminArea" class="card hidden">
-        <button onclick="goHome()" style="background:none; border:none; color:var(--accent); cursor:pointer;">❮ Back</button>
-        <h3>တင်မည့် Novel အချက်အလက်</h3>
+        <button class="back-key" onclick="goHome()">❮ Back</button>
+        <h3>Novel အသစ်တင်မည်</h3>
         <input type="text" id="nTitle" placeholder="Novel အမည်">
         <input type="file" id="nCover" accept="image/*">
-        <input type="number" id="nChNo" placeholder="အပိုင်း">
+        <input type="number" id="nChNo" placeholder="အပိုင်း (နံပါတ်)">
         <textarea id="nContent" rows="8" placeholder="စာသားများ..."></textarea>
         <button class="submit-btn" onclick="window.uploadNovel()">Cloud ပေါ်သို့ တင်မည်</button>
     </div>
@@ -56,10 +63,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-    // သင်ပေးထားသော Config
     const firebaseConfig = {
         apiKey: "AIzaSyBIt93W3hXXHu30cMFm47pXj9Dm0UG5IgA",
         authDomain: "hazelnovel-web.firebaseapp.com",
@@ -72,19 +78,29 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-    // Auth Actions
+    // Google Login
+    window.googleLogin = () => {
+        signInWithPopup(auth, provider)
+            .then(() => goHome())
+            .catch(e => alert("Google Login Error: " + e.message));
+    };
+
+    // Email Auth Actions
     window.authAction = (mode) => {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
+        if(!email || !pass) return alert("Email နှင့် Password ဖြည့်ပါ");
+
         if(mode === 'login') {
             signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
         } else {
-            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("Success!")).catch(e => alert(e.message));
+            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("အကောင့်ဖွင့်ပြီးပါပြီ!")).catch(e => alert(e.message));
         }
     };
 
-    window.logout = () => signOut(auth);
+    window.logout = () => signOut(auth).then(() => location.reload());
 
     onAuthStateChanged(auth, (user) => {
         if(user) {
@@ -97,14 +113,14 @@
         }
     });
 
-    // Firestore Upload
+    // Cloud Upload
     window.uploadNovel = async () => {
         const title = document.getElementById('nTitle').value.trim();
         const ch = parseInt(document.getElementById('nChNo').value);
         const content = document.getElementById('nContent').value;
         const file = document.getElementById('nCover').files[0];
 
-        if(!title || !ch || !content) return alert("ဖြည့်ပါ");
+        if(!title || !ch || !content) return alert("အချက်အလက်စုံအောင် ဖြည့်ပါ");
 
         let coverBase64 = "";
         if(file) {
@@ -120,33 +136,29 @@
     };
 
     async function saveToCloud(title, ch, content, cover) {
-        const novelRef = doc(db, "novels", title);
-        const docSnap = await getDoc(novelRef);
-
-        if (docSnap.exists()) {
-            await updateDoc(novelRef, {
-                chapters: arrayUnion({ ch, content })
-            });
-        } else {
-            await setDoc(novelRef, {
-                title: title,
-                cover: cover,
-                chapters: [{ ch, content }]
-            });
-        }
-        alert("Cloud ပေါ်သို့ တင်ပြီးပါပြီ!");
-        location.reload();
+        try {
+            const novelRef = doc(db, "novels", title);
+            const docSnap = await getDoc(novelRef);
+            if (docSnap.exists()) {
+                await updateDoc(novelRef, { chapters: arrayUnion({ ch, content }) });
+            } else {
+                await setDoc(novelRef, { title, cover, chapters: [{ ch, content }] });
+            }
+            alert("အောင်မြင်စွာ တင်ပြီးပါပြီ!");
+            goHome();
+        } catch (e) { alert("Error: " + e.message); }
     }
 
     async function loadLibrary() {
         const querySnapshot = await getDocs(collection(db, "novels"));
         const list = document.getElementById('libraryList');
         list.innerHTML = "";
+        if(querySnapshot.empty) list.innerHTML = "Novel များ မရှိသေးပါ။";
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             const div = document.createElement('div');
             div.className = 'novel-item';
-            div.innerHTML = `<img src="${data.cover || ''}"> <div><strong>${data.title}</strong></div>`;
+            div.innerHTML = `<img src="${data.cover || 'https://via.placeholder.com/60x80'}"> <div><strong>${data.title}</strong></div>`;
             list.appendChild(div);
         });
     }
@@ -155,10 +167,14 @@
         document.getElementById('mainSection').classList.add('hidden');
         document.getElementById('adminArea').classList.remove('hidden');
     };
-    window.goHome = () => location.reload();
+    window.goHome = () => {
+        document.getElementById('adminArea').classList.add('hidden');
+        document.getElementById('mainSection').classList.remove('hidden');
+        loadLibrary();
+    };
 
 </script>
 </body>
 </html>
 
-
+    
