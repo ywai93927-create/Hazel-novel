@@ -3,50 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hazel Novel - Studio</title>
+    <title>Hazel Studio</title>
     <style>
         :root { --accent: #ff9f43; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
-        .status { color: var(--accent); text-align: center; font-size: 14px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div id="authBox" class="card">
     <h2 style="text-align:center;">Hazel Login</h2>
-    <input type="email" id="email" placeholder="Email Address">
+    <input type="email" id="email" placeholder="Email">
     <input type="password" id="pass" placeholder="Password">
-    <button id="authBtn" onclick="window.authAction()">Login / Sign Up</button>
+    <button onclick="window.authAction()">Login</button>
 </div>
 
 <div id="studioBox" class="hidden">
     <div class="card">
-        <h3>Post New Chapter</h3>
-        <input type="text" id="nTitle" placeholder="Novel Title (e.g. My Story)">
-        <input type="number" id="nChNo" placeholder="Chapter No (e.g. 1)">
-        <textarea id="nContent" rows="10" placeholder="Write your content here..."></textarea>
+        <h3>Publish Novel</h3>
+        <input type="text" id="nTitle" placeholder="Novel Title">
+        <input type="number" id="nChNo" placeholder="Chapter Number">
+        <textarea id="nContent" rows="8" placeholder="Content..."></textarea>
         <button id="pubBtn" onclick="window.publish()">Publish Now</button>
-        <div id="msg" class="status"></div>
     </div>
     <div id="list"></div>
-    <button onclick="window.logout()" style="background:#444; color:white; margin-top:20px;">Logout</button>
+    <button onclick="window.logout()" style="background:#444; color:white; margin-top:10px;">Logout</button>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+    // Firebase version ကို 10.7.1 (ပိုတည်ငြိမ်တဲ့ version) ကို ပြောင်းသုံးထားပါတယ်
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, arrayUnion, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Configuration အမှန် (hazelnovel-web အတွက်)
     const firebaseConfig = {
         apiKey: "AIzaSyBIt93W3hXXHu30cMFm47pXj9Dm0UG5IgA",
         authDomain: "hazelnovel-web.firebaseapp.com",
         projectId: "hazelnovel-web",
-        storageBucket: "hazelnovel-web.firebasestorage.app",
+        storageBucket: "hazelnovel-web.appspot.com",
         messagingSenderId: "516666865374",
         appId: "1:516666865374:web:e89a3906e27143cf53744f"
     };
@@ -58,61 +56,67 @@
     window.authAction = async () => {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        if(!e || !p) return alert("Email နှင့် Password ရိုက်ပါ");
         try {
             await signInWithEmailAndPassword(auth, e, p);
         } catch {
-            try { await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); }
+            try { await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert("Auth Error: " + err.message); }
         }
     };
 
-    onAuthStateChanged(auth, (user) => {
-        if(user) {
+    onAuthStateChanged(auth, (u) => {
+        if(u) {
             document.getElementById('authBox').classList.add('hidden');
             document.getElementById('studioBox').classList.remove('hidden');
-            loadNovels();
+            load();
         }
     });
 
     window.publish = async () => {
-        const title = document.getElementById('nTitle').value.trim();
-        const ch = document.getElementById('nChNo').value;
-        const content = document.getElementById('nContent').value;
-        const btn = document.getElementById('pubBtn');
-        const msg = document.getElementById('msg');
+        const t = document.getElementById('nTitle').value.trim();
+        const c = document.getElementById('nChNo').value;
+        const con = document.getElementById('nContent').value;
+        if(!t || !con) return alert("အချက်အလက်ဖြည့်ပါ");
 
-        if(!title || !content) return alert("Title နှင့် Content ထည့်ပါ");
-        
-        btn.disabled = true; msg.innerText = "တင်နေပါသည်...";
+        const btn = document.getElementById('pubBtn');
+        btn.innerText = "Publishing...";
+        btn.disabled = true;
 
         try {
-            const ref = doc(db, "novels", title);
+            // Firestore ထဲ စာရေးတဲ့အခါ Error တက်ရင် Alert ပြအောင် လုပ်ထားပါတယ်
+            const ref = doc(db, "novels", t);
             const snap = await getDoc(ref);
-            const chapterData = { ch, content, time: Date.now() };
-
+            const entry = { ch: Number(c), content: con, time: Date.now() };
+            
             if(snap.exists()) {
-                await updateDoc(ref, { chapters: arrayUnion(chapterData) });
+                await updateDoc(ref, { chapters: arrayUnion(entry) });
             } else {
-                await setDoc(ref, { title, chapters: [chapterData], author: auth.currentUser.uid });
+                await setDoc(ref, { title: t, chapters: [entry], author: auth.currentUser.uid });
             }
-            alert("အောင်မြင်စွာ တင်ပြီးပါပြီ!"); location.reload();
+            alert("အောင်မြင်စွာ တင်ပြီးပါပြီ!"); 
+            location.reload();
         } catch(e) { 
-            alert("Error: " + e.message); 
-            btn.disabled = false; msg.innerText = "";
+            console.error(e);
+            alert("စာတင်မရရခြင်း အကြောင်းရင်း: " + e.message); 
+            btn.innerText = "Publish Now";
+            btn.disabled = false;
         }
     };
 
-    async function loadNovels() {
-        const snap = await getDocs(collection(db, "novels"));
-        const list = document.getElementById('list');
-        list.innerHTML = "<h3>My Novels</h3>";
-        snap.forEach(d => {
-            const n = d.data();
-            list.innerHTML += `<div class="card"><strong>${n.title}</strong><br><small>Chapters: ${n.chapters.length}</small></div>`;
-        });
+    async function load() {
+        try {
+            const snap = await getDocs(collection(db, "novels"));
+            const l = document.getElementById('list');
+            l.innerHTML = "<h4>Your Novels</h4>";
+            snap.forEach(d => {
+                l.innerHTML += `<div class="card">${d.data().title}</div>`;
+            });
+        } catch(e) { console.log(e); }
     }
 
     window.logout = () => signOut(auth).then(() => location.reload());
 </script>
 </body>
 </html>
+
+
+    
