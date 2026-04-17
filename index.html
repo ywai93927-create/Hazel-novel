@@ -6,28 +6,35 @@
     <title>H - Hazel Novel</title>
     <style>
         :root { --accent: #ff9f43; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --font-size: 16px; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 0; margin: 0; font-size: var(--font-size); }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 0; margin: 0; font-size: var(--font-size); overflow-x: hidden; }
         .container { max-width: 600px; margin: auto; padding: 15px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
-        .logo-h { background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px; font-weight: bold; cursor: pointer; }
-        .profile-icon { font-size: 24px; cursor: pointer; background: #222; padding: 8px; border-radius: 50%; }
+        /* Modern Header & Logo */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
+        .logo-h { background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,159,67,0.3); }
+        .profile-icon { font-size: 22px; cursor: pointer; background: #222; padding: 10px; border-radius: 50%; color: var(--accent); }
 
         .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #222; }
-        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #252525; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: inherit; }
+        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; background: #252525; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: inherit; outline: none; }
         button { cursor: pointer; border-radius: 10px; font-weight: bold; transition: 0.3s; border: none; }
         .submit-btn { background: var(--accent); color: #000; padding: 15px; width: 100%; font-size: 16px; }
+        .submit-btn:disabled { background: #555; cursor: not-allowed; }
         .hidden { display: none !important; }
         
+        /* Tab System */
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; background: #222; color: #888; border-radius: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn { flex: 1; padding: 12px; background: #222; color: #888; border-radius: 8px; font-size: 13px; text-transform: uppercase; font-weight: bold; }
         .tab-btn.active { background: var(--accent); color: #000; }
 
+        /* Novel Display */
         .section-title { font-size: 18px; font-weight: bold; margin: 20px 0 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
         .top-novels-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; scrollbar-width: none; }
+        .top-item { min-width: 110px; }
         .top-item img { width: 110px; height: 150px; object-fit: cover; border-radius: 12px; }
         .recent-item { display: flex; align-items: center; background: #1e1e1e; padding: 12px; margin-bottom: 10px; border-radius: 12px; }
-        .recent-item img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px; }
+        .recent-item img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px; background: #333; }
+        .recent-info h4 { margin: 0; font-size: 15px; }
+        .recent-info p { margin: 5px 0 0; font-size: 12px; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -39,64 +46,65 @@
     </div>
 
     <div id="authSection" class="card">
-        <h3 id="authTitle" style="text-align:center;">Welcome</h3>
+        <h3 id="authTitle" style="text-align:center; margin-top:0;">Welcome to Hazel</h3>
         <input type="text" id="userName" class="hidden" placeholder="Full Name">
-        <input type="email" id="email" placeholder="Email">
+        <input type="email" id="email" placeholder="Email Address">
         <input type="password" id="pass" placeholder="Password">
         <input type="password" id="confirmPass" class="hidden" placeholder="Confirm Password">
-        <button id="mainAuthBtn" class="submit-btn" onclick="window.authAction('login')">Login</button>
-        <button id="toggleBtn" style="background:none; color:#888; margin-top:15px; width:100%;" onclick="window.toggleAuthMode()">Create account</button>
+        <button id="mainAuthBtn" class="submit-btn" onclick="window.authAction()">Login</button>
+        <button id="toggleBtn" style="background:none; color:#888; margin-top:15px; width:100%;" onclick="window.toggleAuthMode()">Create an account</button>
     </div>
 
     <div id="mainSection" class="hidden">
-        <div class="section-title">Trending</div>
+        <div class="section-title">Trending Now</div>
         <div id="topNovelsList" class="top-novels-scroll"></div>
-        <div class="section-title">Latest Updates</div>
+        <div class="section-title">Recent Updates</div>
         <div id="recentUpdatesList"></div>
     </div>
 
     <div id="profileSection" class="hidden">
         <div class="nav-tabs">
-            <button class="tab-btn active" onclick="window.switchTab('studio')">Studio</button>
-            <button class="tab-btn" onclick="window.switchTab('setting')">Settings</button>
+            <button id="tab-studio" class="tab-btn active" onclick="window.switchTab('studio')">Studio</button>
+            <button id="tab-setting" class="tab-btn" onclick="window.switchTab('setting')">Settings</button>
         </div>
 
         <div id="studioTab">
-            <button class="submit-btn" onclick="window.showAdmin()">+ Create Novel</button>
+            <button class="submit-btn" onclick="window.showAdmin()">+ Create New Novel</button>
             <div class="section-title">My Works</div>
             <div id="myNovelsList"></div>
         </div>
 
         <div id="settingTab" class="hidden">
             <div class="card">
-                <h4>Change Password</h4>
+                <h4 style="margin-top:0;">Security</h4>
                 <input type="password" id="oldPass" placeholder="Current Password">
-                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
                 <input type="password" id="newPass" placeholder="New Password">
                 <input type="password" id="confirmNewPass" placeholder="Confirm New Password">
                 <button class="submit-btn" onclick="window.updateUserPassword()">Update Password</button>
             </div>
-            
             <div class="card">
+                <h4 style="margin-top:0;">Display</h4>
                 <span>Font Size: </span>
                 <select onchange="document.documentElement.style.setProperty('--font-size', this.value)">
-                    <option value="16px">Normal</option>
-                    <option value="19px">Large</option>
-                    <option value="22px">Extra Large</option>
+                    <option value="15px">Small</option>
+                    <option value="16px" selected>Normal</option>
+                    <option value="18px">Large</option>
+                    <option value="20px">Extra Large</option>
                 </select>
             </div>
-            <button onclick="window.logout()" style="width:100%; background:#c0392b; color:white; padding:12px; border-radius:10px;">Logout</button>
+            <button onclick="window.logout()" style="width:100%; background:#ff4757; color:white; padding:15px; border-radius:10px;">Logout</button>
         </div>
     </div>
 
     <div id="adminArea" class="card hidden">
-        <button onclick="window.showProfile()" style="background:none; color:var(--accent);">❮ Back to Studio</button>
-        <h3>Creator Studio</h3>
+        <button onclick="window.showProfile()" style="background:none; color:var(--accent); font-weight:bold; margin-bottom:15px;">❮ Back to Studio</button>
+        <h3 style="margin-top:0;">Creator Studio</h3>
         <input type="text" id="nTitle" placeholder="Novel Title">
+        <label style="font-size:12px; color:#888;">Cover Photo:</label>
         <input type="file" id="nCover" accept="image/*">
-        <input type="number" id="nChNo" placeholder="Chapter No.">
-        <textarea id="nContent" rows="12" placeholder="Start writing your masterpiece..."></textarea>
-        <button class="submit-btn" onclick="window.uploadNovel()">Publish</button>
+        <input type="number" id="nChNo" placeholder="Chapter Number">
+        <textarea id="nContent" rows="12" placeholder="Write your chapter content here..."></textarea>
+        <button id="publishBtn" class="submit-btn" onclick="window.uploadNovel()">Publish Chapter</button>
     </div>
 </div>
 
@@ -120,38 +128,42 @@
 
     let isSignUpMode = false;
 
+    // --- UI Logic ---
     window.toggleAuthMode = () => {
         isSignUpMode = !isSignUpMode;
         document.getElementById('userName').classList.toggle('hidden', !isSignUpMode);
         document.getElementById('confirmPass').classList.toggle('hidden', !isSignUpMode);
-        document.getElementById('authTitle').innerText = isSignUpMode ? "Create Account" : "Login";
+        document.getElementById('authTitle').innerText = isSignUpMode ? "Create Account" : "Welcome Back";
+        document.getElementById('mainAuthBtn').innerText = isSignUpMode ? "Sign Up" : "Login";
+        document.getElementById('toggleBtn').innerText = isSignUpMode ? "Already have an account? Login" : "Create an account";
     };
 
     window.switchTab = (tab) => {
         document.getElementById('studioTab').classList.toggle('hidden', tab !== 'studio');
         document.getElementById('settingTab').classList.toggle('hidden', tab !== 'setting');
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.toggle('active', b.innerText.toLowerCase().includes(tab));
-        });
+        document.getElementById('tab-studio').classList.toggle('active', tab === 'studio');
+        document.getElementById('tab-setting').classList.toggle('active', tab === 'setting');
     };
 
-    window.goHome = () => { 
-        document.getElementById('mainSection').classList.remove('hidden'); 
-        document.getElementById('profileSection').classList.add('hidden'); 
-        document.getElementById('adminArea').classList.add('hidden'); 
-    };
-    
-    window.showProfile = () => { 
-        document.getElementById('mainSection').classList.add('hidden'); 
-        document.getElementById('profileSection').classList.remove('hidden'); 
-        document.getElementById('adminArea').classList.add('hidden'); 
+    window.goHome = () => {
+        document.getElementById('mainSection').classList.remove('hidden');
+        document.getElementById('profileSection').classList.add('hidden');
+        document.getElementById('adminArea').classList.add('hidden');
+        document.getElementById('authSection').classList.add('hidden');
     };
 
-    window.showAdmin = () => { 
-        document.getElementById('profileSection').classList.add('hidden'); 
-        document.getElementById('adminArea').classList.remove('hidden'); 
+    window.showProfile = () => {
+        document.getElementById('mainSection').classList.add('hidden');
+        document.getElementById('profileSection').classList.remove('hidden');
+        document.getElementById('adminArea').classList.add('hidden');
     };
 
+    window.showAdmin = () => {
+        document.getElementById('profileSection').classList.add('hidden');
+        document.getElementById('adminArea').classList.remove('hidden');
+    };
+
+    // --- Auth Logic ---
     window.authAction = async () => {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('pass').value;
@@ -161,12 +173,13 @@
         try {
             if(isSignUpMode) {
                 if(pass !== confirm) return alert("Passwords do not match!");
+                if(pass.length < 6) return alert("Password must be at least 6 chars");
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 await updateProfile(res.user, { displayName: name });
             } else {
                 await signInWithEmailAndPassword(auth, email, pass);
             }
-        } catch(e) { alert(e.message); }
+        } catch(e) { alert("Error: " + e.message); }
     };
 
     window.updateUserPassword = async () => {
@@ -175,64 +188,144 @@
         const newP = document.getElementById('newPass').value;
         const confirmP = document.getElementById('confirmNewPass').value;
 
-        if(!oldP || !newP) return alert("Please fill all fields");
-        if(newP !== confirmP) return alert("New passwords do not match!");
+        if(!oldP || !newP) return alert("Fill all fields");
+        if(newP !== confirmP) return alert("New passwords don't match!");
 
         try {
             const credential = EmailAuthProvider.credential(user.email, oldP);
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newP);
-            alert("Password updated successfully!");
+            alert("Success! Password updated.");
             location.reload();
-        } catch(e) { alert("Error: Incorrect current password"); }
+        } catch(e) { alert("Error: " + e.message); }
     };
 
     window.logout = () => signOut(auth).then(() => location.reload());
 
     onAuthStateChanged(auth, (user) => {
-        document.getElementById('authSection').classList.toggle('hidden', !!user);
-        document.getElementById('mainSection').classList.toggle('hidden', !user);
-        document.getElementById('userMenu').classList.toggle('hidden', !user);
+        const isAuth = !!user;
+        document.getElementById('authSection').classList.toggle('hidden', isAuth);
+        document.getElementById('userMenu').classList.toggle('hidden', !isAuth);
+        document.getElementById('mainSection').classList.toggle('hidden', !isAuth);
         if(user) loadContent(user.uid);
     });
 
+    // --- Content & Firebase Logic ---
     window.uploadNovel = async () => {
         const title = document.getElementById('nTitle').value.trim();
         const ch = document.getElementById('nChNo').value;
-        const content = document.getElementById('nContent').value;
+        const content = document.getElementById('nContent').value.trim();
         const file = document.getElementById('nCover').files[0];
-        if(!title || !ch || !content) return alert("Fill all fields");
+        const btn = document.getElementById('publishBtn');
 
-        const reader = new FileReader();
-        reader.onload = async () => {
-            const ref = doc(db, "novels", title);
-            const snap = await getDoc(ref);
-            const data = { ch, content, timestamp: Date.now() };
-            if(snap.exists()) {
-                await updateDoc(ref, { chapters: arrayUnion(data), lastUpdate: Date.now() });
+        if(!title || !ch || !content) return alert("Please fill Title, Chapter and Content!");
+
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        try {
+            if(file) {
+                // Image Compression logic to prevent "Payload too large"
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        // Resize to max 300px width
+                        const scale = 300 / img.width;
+                        canvas.width = 300;
+                        canvas.height = img.height * scale;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        await saveToCloud(title, ch, content, compressedBase64);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             } else {
-                await setDoc(ref, { title, cover: reader.result, chapters: [data], author: auth.currentUser.uid, authorName: auth.currentUser.displayName, lastUpdate: Date.now() });
+                await saveToCloud(title, ch, content, "");
             }
-            alert("Published!"); window.showProfile();
-        };
-        if(file) reader.readAsDataURL(file); else reader.onload();
+        } catch(e) { 
+            alert("Upload failed: " + e.message); 
+            btn.disabled = false;
+            btn.innerText = "Publish Chapter";
+        }
     };
 
+    async function saveToCloud(title, ch, content, cover) {
+        const btn = document.getElementById('publishBtn');
+        try {
+            const ref = doc(db, "novels", title);
+            const snap = await getDoc(ref);
+            const chapterData = { ch, content, timestamp: Date.now() };
+
+            if(snap.exists()) {
+                await updateDoc(ref, { 
+                    chapters: arrayUnion(chapterData), 
+                    lastUpdate: Date.now() 
+                });
+            } else {
+                await setDoc(ref, { 
+                    title, 
+                    cover, 
+                    chapters: [chapterData], 
+                    author: auth.currentUser.uid, 
+                    authorName: auth.currentUser.displayName, 
+                    lastUpdate: Date.now() 
+                });
+            }
+            alert("Published successfully!");
+            location.reload();
+        } catch(e) { 
+            alert("Firebase Error: " + e.message); 
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Publish Chapter";
+        }
+    }
+
     async function loadContent(uid) {
-        const snap = await getDocs(collection(db, "novels"));
-        const topL = document.getElementById('topNovelsList');
-        const recentL = document.getElementById('recentUpdatesList');
-        const myL = document.getElementById('myNovelsList');
-        topL.innerHTML = recentL.innerHTML = myL.innerHTML = "";
-        let all = []; snap.forEach(doc => all.push(doc.data()));
-        all.sort((a,b) => b.lastUpdate - a.lastUpdate);
-        all.forEach(n => {
-            const html = `<div class="recent-item"><img src="${n.cover}"><div><h4>${n.title}</h4><p>Ch ${n.chapters[n.chapters.length-1].ch}</p></div></div>`;
-            recentL.innerHTML += html;
-            topL.innerHTML += `<div class="top-item"><img src="${n.cover}"><span>${n.title}</span></div>`;
-            if(n.author === uid) myL.innerHTML += html;
-        });
+        try {
+            const snap = await getDocs(collection(db, "novels"));
+            const topL = document.getElementById('topNovelsList');
+            const recentL = document.getElementById('recentUpdatesList');
+            const myL = document.getElementById('myNovelsList');
+            
+            topL.innerHTML = recentL.innerHTML = myL.innerHTML = "";
+            let all = [];
+            snap.forEach(doc => all.push(doc.data()));
+            
+            // Sort by latest update
+            all.sort((a,b) => b.lastUpdate - a.lastUpdate);
+
+            all.forEach(n => {
+                const lastCh = n.chapters[n.chapters.length - 1].ch;
+                const coverImg = n.cover || 'https://via.placeholder.com/110x150?text=No+Cover';
+                
+                const recentHtml = `
+                    <div class="recent-item">
+                        <img src="${coverImg}">
+                        <div class="recent-info">
+                            <h4>${n.title}</h4>
+                            <p>By ${n.authorName || 'Unknown'} • Chapter ${lastCh}</p>
+                        </div>
+                    </div>`;
+
+                recentL.innerHTML += recentHtml;
+                topL.innerHTML += `
+                    <div class="top-item" onclick="alert('Reading feature coming soon!')">
+                        <img src="${coverImg}">
+                        <div style="font-size:12px; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+                    </div>`;
+
+                if(n.author === uid) {
+                    myL.innerHTML += recentHtml;
+                }
+            });
+        } catch(e) { console.error("Load Error:", e); }
     }
 </script>
 </body>
 </html>
+
